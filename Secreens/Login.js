@@ -17,19 +17,31 @@ const { width } = Dimensions.get('window');
 const LoginScreen = ({ setTicket, setUsername, setPassword }) => {
   const [username, setLocalUsername] = useState('');
   const [password, setLocalPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const handleLogin = async () => {
- 
+    setIsLoading(true);
+    try {
+      if (!username || !password) {
+        Alert.alert('Uyarı', 'Kullanıcı adı ve şifre alanları boş bırakılamaz.');
+        return;
+      }
+      
       const result = await soapRequest.loginRequest(username, password);
       if (result !== null) {
         setTicket(result);
         setUsername(username);
         setPassword(password);        
-       navigation.navigate('HomeScreen');
+        navigation.navigate('HomeScreen');
       } else {
         Alert.alert('Giriş Başarısız', 'Giriş yapılamadı, lütfen bilgilerinizi kontrol edin.');
       }
-
+    } catch (error) {
+      Alert.alert('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
 
@@ -51,8 +63,13 @@ const LoginScreen = ({ setTicket, setUsername, setPassword }) => {
           onChangeText={setLocalPassword}
           secureTextEntry
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Giriş Yap</Text>
+        <TouchableOpacity 
+          style={[styles.button, isLoading && styles.buttonDisabled]} 
+          onPress={handleLogin}
+          disabled={isLoading}>
+          <Text style={styles.buttonText}>
+            {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -100,6 +117,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
 });
 
